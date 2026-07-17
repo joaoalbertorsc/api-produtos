@@ -5,8 +5,8 @@ import com.api.produtos.dto.ProdutoUpdateDTO;
 import com.api.produtos.exception.ProdutoJaExisteException;
 import com.api.produtos.exception.ProdutoNotFoundException;
 import com.api.produtos.model.Produto;
-import org.springframework.stereotype.Service;
 import com.api.produtos.repository.ProdutoRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -29,19 +29,24 @@ public class ProdutoService {
     }
 
     public Produto criar(ProdutoRequestDTO dto) {
-        if (repository.existsByNome(dto.nome())) {
+        if (repository.findByNomeIgnoreCase(dto.nome()).isPresent()) {
             throw new ProdutoJaExisteException(dto.nome());
         }
-        return repository.save(new Produto(null, dto.nome(), dto.preco()));
+        Produto produto = new Produto(dto.nome(), dto.preco());
+        return repository.save(produto);
     }
 
     public Produto atualizar(Integer id, ProdutoUpdateDTO dto) {
         Produto existente = buscarPorId(id);
 
-        if (dto.nome() != null) existente.setNome(dto.nome());
-        if (dto.preco() != null) existente.setPreco(dto.preco());
+        if (dto.nome() != null && !dto.nome().isBlank()) {
+            existente.setNome(dto.nome());
+        }
+        if (dto.preco() != null) {
+            existente.setPreco(dto.preco());
+        }
 
-        return repository.update(existente);
+        return repository.save(existente);
     }
 
     public void deletar(Integer id) {
